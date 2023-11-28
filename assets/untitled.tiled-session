@@ -1,0 +1,46 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "backgroundtiles.tmj",
+    "expandedProjectPaths": [
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "#tilemap": {
+            "scaleInDock": 3.5467,
+            "scaleInEditor": 1
+        },
+        "backgroundtiles.tmj": {
+            "scale": 0.92,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 255.97826086956525,
+                "y": 170.1086956521739
+            }
+        },
+        "backgroundtiles.tmj#tilemap": {
+            "scaleInDock": 1.79
+        }
+    },
+    "last.imagePath": "/Users/yashmalegaonkar/Documents/CMPM120/Twisted Wizard",
+    "map.lastUsedFormat": "json",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "openFiles": [
+        "backgroundtiles.tmj"
+    ],
+    "project": "untitled.tiled-project",
+    "recentFiles": [
+        "backgroundtiles.tmj"
+    ],
+    "resizeMap.removeObjects": false,
+    "tileset.embedInMap": true,
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    },
+    "tileset.transparentColor": "#000000",
+    "tileset.useTransparentColor": true
+}

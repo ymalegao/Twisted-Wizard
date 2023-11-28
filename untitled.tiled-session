@@ -1,0 +1,34 @@
+{
+    "activeFile": "backgroundtiles.tmj",
+    "expandedProjectPaths": [
+    ],
+    "fileStates": {
+        "#tilemap": {
+            "scaleInDock": 3.5467,
+            "scaleInEditor": 1
+        },
+        "backgroundtiles.tmj": {
+            "scale": 0.92,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 255.97826086956525,
+                "y": 170.1086956521739
+            }
+        },
+        "backgroundtiles.tmj#tilemap": {
+            "scaleInDock": 1.79,
+            "scaleInEditor": 2.16
+        }
+    },
+    "last.exportedFilePath": "/Users/yashmalegaonkar/Documents/CMPM120/Twisted Wizard/assets",
+    "last.imagePath": "/Users/yashmalegaonkar/Documents/CMPM120/Twisted Wizard/assets",
+    "map.lastUsedExportFilter": "JSON map files (*.tmj *.json)",
+    "openFiles": [
+        "backgroundtiles.tmj"
+    ],
+    "project": "untitled.tiled-project",
+    "recentFiles": [
+        "backgroundtiles.tmj"
+    ],
+    "resizeMap.removeObjects": false
+}
