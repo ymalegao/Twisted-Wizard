@@ -1,6 +1,6 @@
 let config = {
     parent: 'phaser-game',
-    type: Phaser.CANVAS,
+    type: Phaser.WEBGL,
     pixelArt: true,
     width: 500,
     height: 300,
