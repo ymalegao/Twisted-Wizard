@@ -26,6 +26,7 @@ class Goblin extends Phaser.Physics.Arcade.Sprite {
 
     static spawnGoblins(scene, x, y, target){
         const goblin = new Goblin(scene, x, y);
+        goblin.setScale(0.5);
 
         if (target) {
             goblin.play('walk');

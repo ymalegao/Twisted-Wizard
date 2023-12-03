@@ -9,6 +9,9 @@ class Play extends Phaser.Scene {
         this.buildingPhase = true;
         this.buldingTimer = null;
         this.spawnTimer = null;
+        this.allowLightning = true;
+        this.enemycount = 10;
+
     }
 
     preload() {
@@ -41,14 +44,14 @@ class Play extends Phaser.Scene {
 
     create(){
     
-        this.buldingTimer = this.time.addEvent({
-            delay: 500, 
-            callback: this.placingPhase,
-            callbackScope: this,
-            loop: true, 
-            paused:false
+        // this.buldingTimer = this.time.addEvent({
+        //     delay: 2000, 
+        //     callback: this.placingPhase,
+        //     callbackScope: this,
+        //     loop: true, 
+        //     paused:false
         
-        });
+        // });
 
         
         this.spawnTimer = this.time.addEvent({
@@ -64,7 +67,7 @@ class Play extends Phaser.Scene {
         const bgLayer = map.createLayer('Tile Layer 1', tileset, 0,0);
         this.wizard = this.physics.add.sprite(config.width/2, config.height/2, 'wizard', 0);
         this.wizard.body.setCollideWorldBounds(true)
-        this.wizard.body.setSize(this.wizard.width,this.wizard.height, true)
+        this.wizard.body.setSize(this.wizard.width-40,this.wizard.height-25, true)
 
         this.anims.create({
             key: 'idle',
@@ -134,7 +137,9 @@ class Play extends Phaser.Scene {
         
         this.buildingPhase = true;
         this.lightningGroup = this.physics.add.group();
-        if (this.lightningEventTriggered) {
+        
+        
+        if (!this.lightningEventTriggered) {
         this.input.on('pointerdown', (pointer) => {
             this.castLightning(pointer.x, pointer.y);
         });
@@ -145,6 +150,11 @@ class Play extends Phaser.Scene {
         this.wallarr = ['block1', 'block2', 'block3'];
         this.wallCount = 10;
         console.log(this.buildingPhase);
+        this.input.on('pointerdown', (pointer) => {
+            if (this.buildingPhase && this.wallCount > 0) {
+                this.placingPhase(pointer.x, pointer.y);
+            }
+        });
         
         
         // if (this.flag){
@@ -182,76 +192,128 @@ class Play extends Phaser.Scene {
 
     handleWallGoblinCollision(wall,goblin){
         console.log("collided with wall");
+        wall.destroy();
         goblin.play('attack');
     }
     spawnGoblins(x,y){
         const goblin = this.physics.add.sprite(x,y,'goblin');
         goblin.body.setImmovable(true);
+        goblin.setScale(0.5);
+
 
         goblin.play('walk');
         this.goblinGroup.add(goblin);
         const angle = Phaser.Math.Angle.BetweenPoints(goblin, this.wizard);
-        const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize().scale(20);
+        const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize().scale(35);
         goblin.body.setVelocity(velocity.x, velocity.y);
     }
 
 
-    placingPhase(){
+    placingPhase(pointerX, pointerY) {
         console.log("calling function");
         console.log(this.buildingPhase);
         console.log(this.flag);
         console.log(this.wallCount);
-
-        if (this.wallCount >= 0){
-            
-            if (this.wallCount === 0){
+    
+        if (this.wallCount >= 0) {
+    
+            if (this.wallCount === 0) {
                 console.log("do we get here")
-                this.flag= true;
+                this.flag = true;
                 this.buildingPhase = false;
-                this.buldingTimer.paused = true;
+                this.enemycount = 10;
+                // this.buldingTimer.paused = true;
+                
                 return null;
             }
+    
             const ranIndex = Phaser.Math.Between(0, this.wallarr.length - 1);
-            let wallPreview = Wall.preview(this, -1, -1, this.wallarr[0]);
-            this.input.on('pointermove', (pointer) => {
-                wallPreview.x = pointer.x;
-                wallPreview.y = pointer.y;
-                // wallPreview.clearTint();
+            const shouldPlaceThreeBlocks = Math.random() < 0.5;
+let wallPreview;
 
-            });
-                
-            this.input.on('pointerdown', (pointer) => {
-                const spawnWall = Wall.spawn(this,pointer.x,pointer.y,this.wallarr[0],this.wallarr[0].height,this.wallarr[0].width,wallPreview, this.wallCount);
-                wallPreview.destroy();
-                    // if (this.wallCount <= 0){
-                    //     wallPreview.destroy();
-                    //     this.flag= true;
-                    //     this.buildingPhase = false;
-                    // }
-                if (spawnWall){
-                    this.wallGroup.add(spawnWall);
-                    this.physics.add.collider(spawnWall, this.goblinGroup, this.handleWallGoblinCollision, null, this);
-                    this.wallCount--;
-                    console.log(this.wallCount);
-                    wallPreview.destroy();
-                    
-                    if (this.wallCount === 0) {
+if (shouldPlaceThreeBlocks) {
+    this.verticalPreview = Math.random() < 0.4;
+
+    if (this.verticalPreview ) {
+        console.log("vert")
+        wallPreview = Wall.previewThreeInCol(this, -1, -1, this.wallarr[0]);
+    } else {
+        console.log("hor")
+
+        wallPreview = Wall.previewThreeInRow(this, -1, -1, this.wallarr[0]);
+    }
+} else {
+    wallPreview = Wall.preview(this, -1, -1, this.wallarr[0]);
+}
+
+this.input.on('pointermove', (pointer) => {
+    wallPreview.forEach((wall, index) => {
+        if (this.verticalPreview) {
+            // Adjust the spacing based on the block width for single block or horizontal triple
+            wall.x = pointer.x;
+
+            wall.y = pointer.y + index * 18;
+        } else {
+            // Adjust the spacing based on the block height for vertical triple
+            wall.x = pointer.x + index * 18;
+
+            wall.y = pointer.y;
+        }
+    });
+});
+    
+            // wallPreview.clearTint();
+            const blocksToSpawn = shouldPlaceThreeBlocks ? 3 : 1;
+    
+            this.input.once('pointerdown', (pointer) => {
+                if (this.wallCount >= blocksToSpawn || this.wallCount <= blocksToSpawn) {
+                    wallPreview.forEach((wall, index) => {
+                        const spawnWall = Wall.spawn(
+                            this,
+                            wall.x,
+                            wall.y,
+                            this.wallarr[0],
+                            this.wallarr[0].height,
+                            this.wallarr[0].width,
+                            null,  // Passing null instead of wallPreview
+                            this.wallCount
+                        );
+    
+                        if (spawnWall) {
+                            this.wallGroup.add(spawnWall);
+                            this.physics.add.collider(spawnWall, this.goblinGroup, this.handleWallGoblinCollision, null, this);
+                        }
+                    });
+    
+                    this.wallCount -= blocksToSpawn;
+                    console.log("subtracting from this.wallCount: ", this.wallCount);
+    
+                    // this.wallCount -= shouldPlaceThreeBlocks ? 3 : 1;
+    
+                    // this.wallCount -= shouldPlaceThreeBlocks ? wallPreview.length : 1;
+    
+                    // wallPreview.destroy();
+    
+                    if (this.wallCount <= 0) {
                         this.flag = true;
                         this.buildingPhase = false;
-                        this.buldingTimer.paused = true;
+                        // this.buldingTimer.paused = true;
+                        this.enemycount = 10;
+
                     }
                 }
+    
+                wallPreview.forEach(wall => wall.destroy());
             });
-                
-    }else{
-        this.buildingTimer.paused = true;
+        }
     }
-    }
+            
         castLightning(x, y) {
-            if (this.flag){
+            
             const dist = y;
 
             const lightning = this.physics.add.sprite(x, 0, 'lightning').setOrigin(0,0).setDisplaySize(32,dist);
+            lightning.setSize(16, 16).setOffset(0, lightning.height - 10);
             this.physics.add.overlap(lightning, this.goblinGroup.getChildren(), this.handleLightningCollision, null, this);
             this.wizard.play("cast").once('animationcomplete', () => {
                 this.wizard.play("idle");
@@ -264,40 +326,56 @@ class Play extends Phaser.Scene {
             
             });
             this.lightningGroup.add(lightning);
-        }
+        
         }
     
         
         handleLightningCollision(lightning, goblin) {
-            lightning.play('strike', true, 0);
-            
-            goblin.play('die',true,0).once('animationcomplete', () => {
-                goblin.destroy();
-                console.log('defeated!');
-            
-            
-            });
-            console.log('Strike!');
-        }
+            // Check if the goblin is not already hit
+            if (!goblin.isHit) {
+                goblin.isHit = true;  // Set a flag to avoid multiple hits
         
+                this.enemycount--;
+                if (this.enemycount === 0){
+                    this.buildingPhase = true;
+                    this.wallCount = 10;
+                }
+                console.log(this.enemycount);
+        
+                goblin.play('die').once('animationcomplete', () => {
+                    goblin.destroy();
+                    console.log('defeated!');
+                });
+            }
+        }
 
     update(){
-        
+        this.physics.overlap(this.lightningGroup, this.goblinGroup, this.handleLightningCollision, null, this);
+
         if (this.cursors.left.isDown) {
             this.wizard.play("cast").once('animationcomplete', () => {
                 this.wizard.play("idle");
             });
         }
+        if (this.buildingPhase) {
+            // this.buldingTimer.paused = false;
+            this.spawnTimer.paused = true;
+        
+        }
 
         if (!this.buildingPhase) {
-            this.buldingTimer.paused = true;
+            // this.buldingTimer.paused = true;
             this.spawnTimer.paused = false;
-            this.lightningEventTriggered = true;
-            console.log(this.lightningEventTriggered)
-            // if (!this.lightningEventTriggered) {
-            //     this.input.on('pointerdown', (pointer) => {
+       
+            // if (!this.lightningEventTriggered && this.allowLightning) {
+            //     this.input.once('pointerdown', (pointer) => {
             //         this.castLightning(pointer.x, pointer.y);
             //         this.lightningEventTriggered = true;
+            //         this.allowLightning = false;
+            //         this.time.delayedCall(1000, () => {
+            //             this.allowLightning = true;
+            //         });
+
             //     });
             // }
         }
