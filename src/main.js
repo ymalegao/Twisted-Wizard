@@ -11,7 +11,10 @@ let config = {
         }
     },
     zoom:2,
-    scene: [ Play ]
+    pixelArt:true,
+    scene: [  Title, Instructions, Play, GameOver, Victory ]
 }
 
 const game = new Phaser.Game(config)
+let centerX = game.config.width/2;
+let centerY = game.config.height/2;
