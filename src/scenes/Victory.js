@@ -16,6 +16,12 @@ class Victory extends Phaser.Scene {
     }
 
     create(){
+        this.buildm = this.sound.add('building', {
+            mute:false,
+            volume:0.5,
+            rate:1,
+            loop:true
+        });
         this.anims.create({
             key: 'start',
             frameRate: 3.5,
@@ -34,8 +40,7 @@ class Victory extends Phaser.Scene {
 
         goPlay.on('pointerdown', () => {
             goBack.setTint(0x00ff00);  
-            this.scene.restart('PlayScene')
-
+            this.buildm.stop();
             this.scene.start('PlayScene');
         });
 

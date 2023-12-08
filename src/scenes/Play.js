@@ -1,9 +1,20 @@
 //things to do:
 // have delay during phase switches and text that pops up saying "Enemy phase/ Rebuild yourwall"
 //need to count phases to know if we want to multiply enemy count or wall count by phase number
-//fix spawning of goblins outside
+//
 //cursor less wide - lighting rectangle
+
 //restart play scene after 
+
+//after playtesting
+// move goblins after two secondsish
+// let player kill the enemys in goblin group before the building stage is starting 
+//sound affect for killing hobonins
+//levels faster
+//slow and couple blocks around you 
+//add sound afffect after the win and the loss
+//turn down music, turn satutatiorn of the colors up
+//
 
 
 class Play extends Phaser.Scene {
@@ -16,11 +27,12 @@ class Play extends Phaser.Scene {
         this.buldingTimer = null;
         this.spawnTimer = null;
         this.allowLightning = true;
-        this.enemycount = 2;
+        this.enemycount = 10;
         this.phaseNumber = 1;
         this.waveshown = false;
         this.blocksLeft = 10;
         this.blocksLeftText = null;
+        this.blocksToSpawn = 10;
 
 
     }
@@ -50,6 +62,12 @@ class Play extends Phaser.Scene {
         this.load.bitmapFont('BC', 'BC.png', 'BC.xml');
         this.load.audio("battle", ['Battle3.mp3'])
         this.load.audio('building', ['Build3.mp3']);
+        this.load.image('wand', 'wand.png');
+        this.load.audio('thunder', ['clicksound.mp3'])
+        this.load.audio('winsound', ['winsound.mp3'])
+        this.load.audio('placeblock', ['blockplace.mp3'])
+        this.load.audio('gameover', ['gameover.mp3'])
+
 
 
 
@@ -59,9 +77,9 @@ class Play extends Phaser.Scene {
     }
 
     create(){
-        
+        this.input.setDefaultCursor('url(./assets/biggerhammer.cur), pointer');
         this.spawnTimer = this.time.addEvent({
-            delay: 2000-this.phaseNumber*100, 
+            delay: 1000-this.phaseNumber*100, 
             callback: this.spawnRandomGoblin,
             callbackScope: this,
             loop: true,
@@ -71,10 +89,38 @@ class Play extends Phaser.Scene {
 
         this.buildm = this.sound.add('building', {
             mute:false,
-            volume:0.5,
+            volume:0.3,
             rate:1,
             loop:true
         });
+
+        this.thunder = this.sound.add('thunder', {
+            mute:false,
+            volume:0.2,
+            rate:3,
+            loop:false,
+        });
+        this.placeblock = this.sound.add('placeblock', {
+            mute:false,
+            volume:1.5,
+            rate:1,
+            loop:false,
+        });
+
+        this.win = this.sound.add('winsound', {
+            mute:false,
+            volume:0.4,
+            rate:1,
+            loop:false
+        });
+
+        this.death = this.sound.add('gameover', {
+            mute:false,
+            volume:1.5,
+            rate:1,
+            loop:false
+        });
+
 
         this.battlem = this.sound.add('battle', {
             mute:false,
@@ -94,6 +140,7 @@ class Play extends Phaser.Scene {
         const bgLayer = map.createLayer('Tile Layer 1', tileset, 0,0);
         this.wizard = this.physics.add.sprite(config.width/2, config.height/2, 'wizard', 0);
         this.wizard.body.setCollideWorldBounds(true)
+        this.wizard.setDepth(1);
         this.wizard.body.setSize(this.wizard.width-40,this.wizard.height-25, true)
 
         this.anims.create({
@@ -140,7 +187,7 @@ class Play extends Phaser.Scene {
         this.anims.create({
             key:'dizzy',
             frameRate:8,
-            repeat:-1,
+            repeat:1,
             frames:this.anims.generateFrameNumbers('goblin',{
                 start:5,
                 end:8
@@ -177,7 +224,7 @@ class Play extends Phaser.Scene {
         
         this.wallGroup = this.physics.add.group();
         this.wallarr = ['block1', 'block2', 'block3'];
-        this.wallCount = 10;
+        this.wallCount = 14- 2* this.phaseNumber;
         
         this.blocksLeftText = this.add.bitmapText(centerX+90, centerY - 120, 'BC', 'Blocks Left: ' + this.wallCount, 16).setTintFill(0xfbf236)
        
@@ -203,6 +250,7 @@ class Play extends Phaser.Scene {
 }
 showWaveText() {
     this.buildm.pause();
+    this.input.setDefaultCursor('url(./assets/leftwand.cur), pointer');
 
     this.battlem.play();
     console.log("here")
@@ -245,6 +293,7 @@ showWaveText() {
 showBuildText() {
     // const buildText = this.add.bitmapText(centerX, centerY - 90, 'BC', 'Build your Walls ', 32)
     this.battlem.pause();
+    this.input.setDefaultCursor('url(./assets/lighter.cur), pointer');
 
     this.buildm.play();
     if (this.phaseNumber === 1){
@@ -296,7 +345,8 @@ showBuildText() {
 }
    //spawning goblin stuff here
     spawnRandomGoblin() {
-        const spawnMargin = 50; // Adjust this value to control how far off-screen goblins should spawn
+        if (this.enemycount > 0){
+        const spawnMargin = 50; 
 
     const randomSide = Phaser.Math.Between(0, 3);
     let randomX, randomY;
@@ -320,9 +370,11 @@ showBuildText() {
             break;
         default:
             break;
-    }
+        }
+    
 
-    this.spawnGoblins(randomX, randomY);
+            this.spawnGoblins(randomX, randomY);
+        }
 
     }
 
@@ -331,9 +383,17 @@ showBuildText() {
         wall.destroy();
         goblin.play('attack');
         goblin.play('dizzy').once("animationcomplete", ()=>{
-            const angle = Phaser.Math.Angle.BetweenPoints(goblin, this.wizard);
-            const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize(100*(this.phaseNumber/2)).scale(35);
-            goblin.body.setVelocity(velocity.x, velocity.y);
+            this.time.delayedCall(2000, () =>{
+                console.log("Inside delayed call");
+                if (goblin.active){
+                    console.log("Inside attack call");
+                    goblin.play('attack');
+                const angle = Phaser.Math.Angle.BetweenPoints(goblin, this.wizard);
+                const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize(100*(this.phaseNumber/2)).scale(35);
+                goblin.body.setVelocity(velocity.x, velocity.y);
+                }
+            })
+        
         })
 
         
@@ -410,6 +470,7 @@ showBuildText() {
         
                 // wallPreview.clearTint();
                 let blocksToSpawn = shouldPlaceThreeBlocks ? 3 : 1;
+                console.log(blocksToSpawn , this.blocksLeft)
                 if (blocksToSpawn > this.blocksLeft){
                     console.log("changed to 1 ", blocksToSpawn )
                     blocksToSpawn = 1;
@@ -425,19 +486,22 @@ showBuildText() {
                                 this.wallarr[0],
                                 this.wallarr[0].height,
                                 this.wallarr[0].width,
-                                null, 
+                                wallPreview, 
                                 this.wallCount
                             );
         
                             if (spawnWall) {
                                 this.wallGroup.add(spawnWall);
+                                this.placeblock.play()
                                 this.physics.add.collider(spawnWall, this.goblinGroup, this.handleWallGoblinCollision, null, this);
+                                this.wallCount -= 1;
+                                this.blocksLeft-=1;
                             }
                         });
         
-                        this.wallCount -= blocksToSpawn;
-                        this.blocksLeft-=blocksToSpawn;
-                        console.log("subtracting from this.wallCount: ", this.wallCount);
+                        // this.wallCount -= blocksToSpawn;
+                        // this.blocksLeft-=blocksToSpawn;
+                        // console.log("subtracting from this.wallCount: ", this.wallCount);
         
                       
         
@@ -447,7 +511,8 @@ showBuildText() {
                             this.buildingPhase = false;
                             this.showWaveText();
                             // this.buldingTimer.paused = true;
-                            this.enemycount = 1+this.phaseNumber*5;
+                            this.enemycount = 10 +this.phaseNumber*5;
+                            this.blocksLeft =  10;
 
                         }
 
@@ -459,17 +524,18 @@ showBuildText() {
     }
             
         castLightning(x, y) {
+            this.thunder.play();
 
             console.log("casting lighting")
             const dist = y;
 
-            const lightning = this.physics.add.sprite(x, 0, 'lightning').setOrigin(0,0).setDisplaySize(32,dist);
+            const lightning = this.physics.add.sprite(x-13, 0, 'lightning').setOrigin(0,0).setDisplaySize(32,dist);
             lightning.setSize(16, 16).setOffset(0, lightning.height - 10);
             this.physics.add.overlap(lightning, this.goblinGroup.getChildren(), this.handleLightningCollision, null, this);
             this.wizard.play("cast").once('animationcomplete', () => {
                 this.wizard.play("idle");
              });
-
+            this.thunder.play();
             lightning.play('strike').once('animationcomplete', () => {
                 
                 lightning.destroy();
@@ -484,6 +550,7 @@ showBuildText() {
         
         handleLightningCollision(lightning, goblin) {
             if (!goblin.isHit) {
+
                 goblin.isHit = true;  
                 this.enemycount--;
         
@@ -495,15 +562,14 @@ showBuildText() {
                     console.log('defeated!');
         
                     // Check if all goblins are defeated
-                    if (this.enemycount <= 1 ){
-                        this.goblinGroup.getChildren().forEach((goblin) => {
-                           
-                                goblin.destroy();
-                        });
-        
-                        this.buildingPhase = true;
-                        this.wallCount = 10;
-                        this.showBuildText();
+                    if (this.enemycount <= 0 && this.goblinGroup.getChildren().length === 0){
+                       
+                        
+                            this.buildingPhase = true;
+                            this.wallCount = 10;
+                            // this.blocksLeft = 10;
+                            this.showBuildText();
+                    
                     }
                 });
             }
@@ -511,7 +577,11 @@ showBuildText() {
 
         handleWizardCollision(goblin, wizard){
             this.battlem.pause();
+            this.death.play();
             this.scene.start('gameoverScene')
+            this.blocksLeft = 10;
+            this.phaseNumber = 1;
+
 
         }
 
@@ -527,10 +597,14 @@ showBuildText() {
         }
         if (this.buildingPhase) {
             this.spawnTimer.paused = true;
+            this.goblinGroup.getChildren().forEach(goblin=>{
+                goblin.destroy();
+            })
             this.updateBlocksLeftText();
         
         }
 
+        
         if (!this.buildingPhase) {
             // this.buldingTimer.paused = true;
             this.spawnTimer.paused = false;
@@ -540,7 +614,12 @@ showBuildText() {
         }
 
         if (this.phaseNumber === 4 && this.buildingPhase ){
+            this.buildm.stop();
+            this.win.play()
+            this.spawnTimer.destroy();
             this.scene.start('victoryScene')
+            this.phaseNumber = 1;
+
         }
 
     }
@@ -555,8 +634,6 @@ showBuildText() {
     }
 }
 
-       
-     
 
 
 

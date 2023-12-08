@@ -107,12 +107,10 @@ class Wall extends Phaser.Physics.Arcade.Sprite {
         if (count > 0) {
             for (let i = 0; i < 3; i++) {
                 const newWall = new Wall(scene, x + i * height, y, textureKey, width, height);
-                // newWall.setScale(0.5);
     
                 let canPlaceWall = true;
     
                 scene.wallGroup.getChildren().forEach(existingWall => {
-                    // Check for intersection with individual rectangles
                     if (Phaser.Geom.Intersects.RectangleToRectangle(newWall.getBounds(), existingWall.getBounds())) {
                         canPlaceWall = false;
                         return;
@@ -122,7 +120,6 @@ class Wall extends Phaser.Physics.Arcade.Sprite {
                 if (canPlaceWall) {
                     walls.push(newWall);
                 } else {
-                    // Indicate that no walls were placed
                     walls.forEach(wall => wall.destroy());
                     return [];
                 }

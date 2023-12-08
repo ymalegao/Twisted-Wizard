@@ -13,6 +13,7 @@ class Title extends Phaser.Scene {
     }
 
     create() {
+        this.input.setDefaultCursor('url(./assets/leftwand.cur), pointer');
         // this.time.delayedCall(2000, () => {
         //     this.showWaveText();
         // });
@@ -43,6 +44,8 @@ class Title extends Phaser.Scene {
 
         playText.on('pointerdown', () => {
             playText.setTint(0x00ff00);  
+            // this.scene.restart('PlayScene')
+
             this.scene.start('PlayScene');
             this.buildm.stop()
         });

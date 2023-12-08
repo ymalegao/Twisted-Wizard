@@ -20,13 +20,13 @@ class GameOver extends Phaser.Scene {
 
         goPlay.on('pointerdown', () => {
             goBack.setTint(0x00ff00);  
-            this.scene.restart('PlayScene')
             this.scene.start('PlayScene');
         });
 
 
         goBack.on('pointerdown', () => {
             goBack.setTint(0x00ff00);  
+
             this.scene.start('titleScene');
         });
 
