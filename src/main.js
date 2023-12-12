@@ -12,7 +12,7 @@ let config = {
     },
     zoom:2,
     pixelArt:true,
-    scene: [  Title, Instructions, Play, GameOver, Victory ]
+    scene: [  Title, Instructions, Play, GameOver, Victory, Credits ]
 }
 
 const game = new Phaser.Game(config)

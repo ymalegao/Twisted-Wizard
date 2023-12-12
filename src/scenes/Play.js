@@ -14,7 +14,9 @@
 //slow and couple blocks around you 
 //add sound afffect after the win and the loss
 //turn down music, turn satutatiorn of the colors up
-//
+//add code documentation
+//add credits to game
+//move spawn blocks more off screen
 
 
 class Play extends Phaser.Scene {

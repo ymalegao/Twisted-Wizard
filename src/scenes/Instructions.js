@@ -11,25 +11,19 @@ class Instructions extends Phaser.Scene {
     }
 
     create() {
-        this.add.image(centerX,centerY,'instructions')
-        this.cameras.main.setBackgroundColor('#eec39a');
-        let title01 = this.add.bitmapText(centerX, centerY-110, 'BC', 'Building Phase',24).setOrigin(0.5).setTintFill(0xffffff);
-
-        let text1 = this.add.bitmapText(centerX, centerY-90, 'BC', 'Click to build walls to defend your Wizard from the evil goblins!',18).setOrigin(0.5).setTintFill(0xffffff);
-        let title02 = this.add.bitmapText(centerX, centerY, 'BC', 'Enemy Phase',24).setOrigin(0.5).setTintFill(0xffffff);
-        let text2 = this.add.bitmapText(centerX, centerY+20, 'BC', 'Click to strike the enemy with lightning!',18).setOrigin(0.5).setTintFill(0xffffff);
+    this.add.image(centerX, centerY, 'instructions');
+    this.cameras.main.setBackgroundColor('#eec39a');
+    let backText = this.add.bitmapText(centerX-220, centerY - 130, 'BC', 'back', 16).setOrigin(0.5).setInteractive().setTintFill(0xffffff)
 
 
+    let title04 = this.add.bitmapText(centerX, centerY-40, 'BC', 'During the Building Phase, place blocks around the wizard so he\n\n is protected by the walls. After you have placed all the blocks down,\n\nclick on the enemies to stop them from reaching the wizard. One\n\n collision with an enemy goblin will make you lose the game! ', 18)
+        .setOrigin(0.5)
+        .setTintFill(0xffffff)
 
-
-
-        // this.add.bitmapText(centerX, centerY - 10 , 'BC', '', 24).setOrigin(0.5);
-        let backText = this.add.bitmapText(centerX, centerY + 70, 'BC', 'back', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff)
-
-        backText.on('pointerdown', () => {
-            backText.setTint(0x00ff00);  
-            this.scene.start('titleScene');
-        });
-
-    }
+    
+    backText.on('pointerdown', () => {
+        backText.setTint(0x00ff00);
+        this.scene.start('titleScene');
+    });
+}
 }

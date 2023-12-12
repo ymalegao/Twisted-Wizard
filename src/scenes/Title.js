@@ -39,8 +39,10 @@ class Title extends Phaser.Scene {
 
 
         // this.add.bitmapText(centerX, centerY - 10 , 'BC', '', 24).setOrigin(0.5);
-        let playText = this.add.bitmapText(centerX+30, centerY + 10, 'BC', 'Click to play', 32).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
-        let instructionText = this.add.bitmapText(centerX+30, centerY + 50, 'BC', 'Instructions', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
+        let playText = this.add.bitmapText(centerX+40, centerY, 'BC', 'Click to play', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
+        let instructionText = this.add.bitmapText(centerX-85, centerY, 'BC', 'Instructions | ', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
+        let creditsText = this.add.bitmapText(centerX+150, centerY, 'BC', '| Credits', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
+
 
         playText.on('pointerdown', () => {
             playText.setTint(0x00ff00);  
@@ -53,6 +55,11 @@ class Title extends Phaser.Scene {
         instructionText.on('pointerdown', () => {
             instructionText.setTint(0x00ff00);  
             this.scene.start('instructionScene');
+        });
+
+        creditsText.on('pointerdown', () => {
+            creditsText.setTint(0x00ff00);  
+            this.scene.start('creditsScene');
         });
 
 
