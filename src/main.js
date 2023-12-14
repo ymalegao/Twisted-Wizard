@@ -1,13 +1,17 @@
 let config = {
+    
     parent: 'phaser-game',
     type: Phaser.WEBGL,
     pixelArt: true,
     width: 500,
     height: 300,
+    scale: {
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    },
     physics: {
         default: "arcade",
         arcade: {
-            debug: true
+            debug: false
         }
     },
     zoom:2,

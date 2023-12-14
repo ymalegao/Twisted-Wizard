@@ -1,36 +1,13 @@
-//things to do:
-// have delay during phase switches and text that pops up saying "Enemy phase/ Rebuild yourwall"
-//need to count phases to know if we want to multiply enemy count or wall count by phase number
-//
-//cursor less wide - lighting rectangle
-
-//restart play scene after 
-
-//after playtesting
-// move goblins after two secondsish
-// let player kill the enemys in goblin group before the building stage is starting 
-//sound affect for killing hobonins
-//levels faster
-//slow and couple blocks around you 
-//add sound afffect after the win and the loss
-//turn down music, turn satutatiorn of the colors up
-//add code documentation
-//add credits to game
-//move spawn blocks more off screen
-
 
 class Play extends Phaser.Scene {
     constructor() {
         super('PlayScene')
-        this.currentState = 'building';
-        this.lightningEventTriggered = false;
-        this.flag = false;
-        this.buildingPhase = true;
-        this.buldingTimer = null;
-        this.spawnTimer = null;
-        this.allowLightning = true;
+       
+        this.buildingPhase = true; //always starting with building
+        this.spawnTimer = null; //timer for goblins spawning 
         this.enemycount = 10;
         this.phaseNumber = 1;
+        //these are all flags for conditions
         this.waveshown = false;
         this.blocksLeft = 10;
         this.blocksLeftText = null;
@@ -42,13 +19,15 @@ class Play extends Phaser.Scene {
     preload() {
         // load assets
         this.load.path = './assets/'
-
+        //load background tiles
         this.load.image('backTileImage',"tilemap.png")
         this.load.tilemapTiledJSON('backtilemapJSON', 'backgroundtiles.json')
+        //spritesheets
         this.load.spritesheet('wizard', "wizard.png" ,{
             frameWidth:64,
             frameHeight:72
         });
+        
         this.load.spritesheet('lightning', "lightingsheet.png" ,{
             frameWidth:32,
             frameHeight:300
@@ -57,11 +36,14 @@ class Play extends Phaser.Scene {
             frameWidth:34,
             frameHeight:64
         })
+        //walls
         this.load.image('block4', 'block4.png' );
         this.load.image('block3', 'block3.png' );
         this.load.image('block2', 'block2.png' );
         this.load.image('block1', 'block1.png' );
+        //font
         this.load.bitmapFont('BC', 'BC.png', 'BC.xml');
+        //all audios
         this.load.audio("battle", ['Battle3.mp3'])
         this.load.audio('building', ['Build3.mp3']);
         this.load.image('wand', 'wand.png');
@@ -69,17 +51,14 @@ class Play extends Phaser.Scene {
         this.load.audio('winsound', ['winsound.mp3'])
         this.load.audio('placeblock', ['blockplace.mp3'])
         this.load.audio('gameover', ['gameover.mp3'])
+        this.load.audio('zap', ['zap.mp3'])
 
-
-
-
-
-        // this.load.atlas('background', 'img/fruitandveg.png', 'img/fruitandveg.json')
-        // this.load.bitmapFont('gem_font', 'font/gem.png', 'font/gem.xml')
     }
 
     create(){
+        //set cursor to building cursor
         this.input.setDefaultCursor('url(./assets/biggerhammer.cur), pointer');
+        //create spawn timer and pause
         this.spawnTimer = this.time.addEvent({
             delay: 1000-this.phaseNumber*100, 
             callback: this.spawnRandomGoblin,
@@ -89,17 +68,18 @@ class Play extends Phaser.Scene {
         
         });
 
+        //adding sounds
         this.buildm = this.sound.add('building', {
             mute:false,
-            volume:0.3,
+            volume:0.2,
             rate:1,
             loop:true
         });
 
-        this.thunder = this.sound.add('thunder', {
+        this.thunder = this.sound.add('zap', {
             mute:false,
-            volume:0.2,
-            rate:3,
+            volume:0.3,
+            rate:1,
             loop:false,
         });
         this.placeblock = this.sound.add('placeblock', {
@@ -111,14 +91,14 @@ class Play extends Phaser.Scene {
 
         this.win = this.sound.add('winsound', {
             mute:false,
-            volume:0.4,
+            volume:1,
             rate:1,
             loop:false
         });
 
         this.death = this.sound.add('gameover', {
             mute:false,
-            volume:1.5,
+            volume:3,
             rate:1,
             loop:false
         });
@@ -130,21 +110,24 @@ class Play extends Phaser.Scene {
             rate:1,
             loop:true
         });
-        // this.buildm.play();
 
 
 
 
 
-
+        //create background tilemap
         const map = this.add.tilemap('backtilemapJSON');
         const tileset = map.addTilesetImage('tilemap', 'backTileImage');
         const bgLayer = map.createLayer('Tile Layer 1', tileset, 0,0);
+        //create wizard, set collions and physics and set depth to one so blocks so behind
         this.wizard = this.physics.add.sprite(config.width/2, config.height/2, 'wizard', 0);
         this.wizard.body.setCollideWorldBounds(true)
         this.wizard.setDepth(1);
+        //changing collison box
         this.wizard.body.setSize(this.wizard.width-40,this.wizard.height-25, true)
 
+
+        //creating animations
         this.anims.create({
             key: 'idle',
             frameRate: 4,
@@ -215,34 +198,42 @@ class Play extends Phaser.Scene {
                 end:23
             })
         })
+        //call tween function 
         this.showBuildText();
+        //start wizard animation
         this.wizard.play('idle')
+        //set up user input
         this.cursors = this.input.keyboard.createCursorKeys()
+        //create goblin group 
         this.goblinGroup = this.physics.add.group();
-        
+        //start buildingPhase at true just in case!!
         this.buildingPhase = true;
+        //lightning group 
         this.lightningGroup = this.physics.add.group();
         
-        
+        //wall group
         this.wallGroup = this.physics.add.group();
-        this.wallarr = ['block1', 'block2', 'block3'];
+        //
+        this.wallarr = ['block1', 'block2', 'block3']; //wall array, really just need block[0] but I am wokring  on the other ones if I need to 
+        //start with 12 then 10 then 8
         this.wallCount = 14- 2* this.phaseNumber;
         
-        this.blocksLeftText = this.add.bitmapText(centerX+90, centerY - 120, 'BC', 'Blocks Left: ' + this.wallCount, 16).setTintFill(0xfbf236)
-       
+        this.blocksLeftText = this.add.bitmapText(centerX+110, centerY - 140, 'BC', 'Blocks Left: ' + this.wallCount, 16).setTintFill(0xffffff)
+            //if not building phase then cast lighting if click 
             this.input.on('pointerdown', (pointer) => {
                 if (!this.buildingPhase) {
                     this.castLightning(pointer.x, pointer.y);
                 }
             });
         
-        console.log(this.buildingPhase);
-        this.input.once('pointermove', (pointer) => {
+            //because first time so we want to get the preview before the first click is done
+            this.input.once('pointermove', (pointer) => {
             if (this.buildingPhase && this.wallCount > 0) {
                 this.placingPhase(pointer.x, pointer.y);
             }
         });
 
+       //call placingPhase function every click in the  building phase
         this.input.on('pointerdown', (pointer) => {
             if (this.buildingPhase && this.wallCount > 0) {
                 this.placingPhase(pointer.x, pointer.y);
@@ -250,41 +241,44 @@ class Play extends Phaser.Scene {
         });
 
 }
+//function to switch between phases kinda
 showWaveText() {
+    //pause music
     this.buildm.pause();
+    //change cursor
     this.input.setDefaultCursor('url(./assets/leftwand.cur), pointer');
-
+    //play battle music
     this.battlem.play();
-    console.log("here")
     const waveText = this.add.bitmapText(centerX, centerY - 100, 'BC', 'Wave ' + this.phaseNumber, 32)
         .setOrigin(0.5)
-        .setTint(0xfbf236)
+        .setTintFill(0xffffff)
         .setAlpha(0);  
 
    
     if (!this.waveshown){
-        this.tweens.add({
-        targets: waveText,
-        duration: 1000,  
-        scaleX: 1.5,  
-        scaleY: 1.5, 
-        alpha: 1, 
-        ease: 'Quad.easeOut',  
-        onComplete: () => {
-            this.time.delayedCall(2000, () => {
+        //tween to pop from center 
+        this.tweens.add({targets: waveText, 
+            duration: 1000, 
+            scaleX: 1.5,  
+            scaleY: 1.5, 
+            alpha: 1, 
+            ease: 'Quad.easeOut',  
+            onComplete: () => {
+                this.time.delayedCall(2000, () => {
                
-                this.tweens.add({
-                    targets: waveText,
-                    duration: 500, 
-                    alpha: 0,  
-                    ease: 'Quad.easeIn',  
-                    onComplete: () => {
-                        waveText.destroy();
-                        this.phaseNumber++;
-                       
-                    }
+                    this.tweens.add({
+                        targets: waveText,
+                        duration: 500, 
+                        alpha: 0,  
+                        ease: 'Quad.easeIn',  
+                        onComplete: () => {
+                            //advance phase number after this call
+                            waveText.destroy();
+                            this.phaseNumber++;
+                        
+                        }
+                    });
                 });
-            });
         }
         
     });
@@ -292,28 +286,32 @@ showWaveText() {
     }
 }
 
+//function to also switch between phases
 showBuildText() {
-    // const buildText = this.add.bitmapText(centerX, centerY - 90, 'BC', 'Build your Walls ', 32)
+    //pause battle music
     this.battlem.pause();
+    //change cursor
     this.input.setDefaultCursor('url(./assets/lighter.cur), pointer');
-
+    //play build 
     this.buildm.play();
+    //phase 1  is just build, phase2 is rebuild
     if (this.phaseNumber === 1){
+        
         this.buildText = this.add.bitmapText(centerX, centerY - 100, 'BC', 'Build your Walls ', 32)
         .setOrigin(0.5)
-        .setTintFill('0xfbf236')
+        .setTintFill('0xffffff')
         .setAlpha(0); 
     }else{
         this.buildText = this.add.bitmapText(centerX, centerY - 100, 'BC', 'Rebuild your Walls ', 32)
         .setOrigin(0.5)
-        .setTintFill('0xfbf236')
+        .setTintFill('0xffffff')
         .setAlpha(0); 
     }
     
      
     this.waveshown = false;
     if (!this.waveshown){
-
+        //same tween  as above just for buildtext as target
         this.tweens.add({
         targets: this.buildText,
         duration: 1000, 
@@ -330,6 +328,7 @@ showBuildText() {
                     ease: 'Quad.easeIn', 
                     onComplete: () => {
                         this.buildText.destroy();
+                        //get preview before they click again 
                         this.input.once('pointermove', (pointer) => {
                             if (this.buildingPhase && this.wallCount > 0) {
                                 this.placingPhase(pointer.x, pointer.y);
@@ -346,27 +345,30 @@ showBuildText() {
     }
 }
    //spawning goblin stuff here
-    spawnRandomGoblin() {
+    
+   spawnRandomGoblin() {
+        //dont spawn if enemy count is alraedy down to 0
         if (this.enemycount > 0){
+        
         const spawnMargin = 50; 
 
-    const randomSide = Phaser.Math.Between(0, 3);
-    let randomX, randomY;
+        const randomSide = Phaser.Math.Between(0, 3);
+        let randomX, randomY;
 
     switch (randomSide) {
-        case 0: //top
+        case 0: //top so want number betwwen -50 and width + 50 and off screen
             randomX = Phaser.Math.Between(-spawnMargin, config.width + spawnMargin);
             randomY = -spawnMargin;
             break;
-        case 1: // bot
+        case 1: // bot (-50 - width + 50) , (bottom +50)
             randomX = Phaser.Math.Between(-spawnMargin, config.width + spawnMargin);
             randomY = config.height + spawnMargin;
             break;
-        case 2: // left
+        case 2: // left so -50 , (-50 and height + 50 )
             randomX = -spawnMargin;
             randomY = Phaser.Math.Between(-spawnMargin, config.height + spawnMargin);
             break;
-        case 3: // right
+        case 3: // right so (width+50), (-50, height + 50)
             randomX = config.width + spawnMargin;
             randomY = Phaser.Math.Between(-spawnMargin, config.height + spawnMargin);
             break;
@@ -374,78 +376,66 @@ showBuildText() {
             break;
         }
     
-
+            //call spawnGoblins function 
             this.spawnGoblins(randomX, randomY);
         }
 
     }
-
-    handleWallGoblinCollision(wall,goblin){
-        console.log("collided with wall");
+    //function to handle wall and goblin collisions
+    handleWallGoblinCollision(wall, goblin) {
+        //destroy wall play goblin animation
         wall.destroy();
         goblin.play('attack');
-        goblin.play('dizzy').once("animationcomplete", ()=>{
-            this.time.delayedCall(2000, () =>{
-                console.log("Inside delayed call");
-                if (goblin.active){
-                    console.log("Inside attack call");
-                    goblin.play('attack');
+        
+        //play dizzy and once its over if the goblin hasnt died then we play attack animation and reset velvocity and direction toward wizard
+        goblin.play('dizzy').once("animationcomplete", () => {
+            if (goblin.active) {
+                goblin.play('attack');
                 const angle = Phaser.Math.Angle.BetweenPoints(goblin, this.wizard);
-                const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize(100*(this.phaseNumber/2)).scale(35);
+                const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize(100 * (this.phaseNumber / 2)).scale(35);
                 goblin.body.setVelocity(velocity.x, velocity.y);
-                }
-            })
-        
-        })
-
-        
+            } else {
+                goblin.destroy();
+            }
+        });
     }
+    //function to add goblins to game
     spawnGoblins(x,y){
+        //make new goblin and start animations and add to group
         const goblin = this.physics.add.sprite(x,y,'goblin');
         goblin.body.setImmovable(true);
         goblin.setScale(0.7);
         goblin.play('walk');
         this.goblinGroup.add(goblin);
+        //set velcoity based on phase number and calculate angle between the goblin and the wizard in the middle
         const angle = Phaser.Math.Angle.BetweenPoints(goblin, this.wizard);
         const velocity = new Phaser.Math.Vector2(Math.cos(angle), Math.sin(angle)).normalize(100).scale(35*(this.phaseNumber/2));
+        //set velocity
         goblin.body.setVelocity(velocity.x, velocity.y);
         
        
     }
 
-
+    //placing phase function 
     placingPhase(pointerX, pointerY) {
-        console.log("calling function");
-        console.log(this.buildingPhase);
-        console.log(this.flag);
-        console.log(this.wallCount);
-    
+        //if there are any walls to place
         if (this.wallCount >= 0) {
     
-            if (this.wallCount === 0) {
-                console.log("do we get here")
-                this.flag = true;
-                this.buildingPhase = false;
-                this.enemycount = 10;
-                // this.buldingTimer.paused = true;
-                
-                return null;
-            }
+            // choose randomly if three block or 1 block 
             let shouldPlaceThreeBlocks = Math.random() < 0.5;
+            //but if there are 2 or less blocks in the wall count then change the flag to a singl block
             if (this.wallCount-3 === 2 || this.wallCount-3 === 1 || this.wallCount-3 === 0 || this.wallCount === 2 || this.wallCount === 1){
                 console.log("force the else")
                 shouldPlaceThreeBlocks = false;
             }
             let wallPreview;
-        
+                //if placing three blocks then randomly see if verticle or horizontal
                 if (shouldPlaceThreeBlocks) {
                 this.verticalPreview = Math.random() < 0.4;
-
+                    //call function accordingly one for verticle and one for horizontal
                     if (this.verticalPreview ) {
-                            console.log("vert")
                             wallPreview = Wall.previewThreeInCol(this, -1, -1, this.wallarr[0]);
                         } else {
-                            console.log("hor")
 
                         wallPreview = Wall.previewThreeInRow(this, -1, -1, this.wallarr[0]);
                         }
@@ -453,8 +443,9 @@ showBuildText() {
                     wallPreview = Wall.preview(this, -1, -1, this.wallarr[0]);
                 }
             
-
+    //any time the pointer moves
     this.input.on('pointermove', (pointer) => {
+        //change the position of the wallpreview to follow pointer
         wallPreview.forEach((wall, index) => {
             if (this.wallCount > 0){
             if (this.verticalPreview) {
@@ -471,15 +462,18 @@ showBuildText() {
     });
         
                 // wallPreview.clearTint();
+                //blocks to spawn is 3 or 1 depending on if placethreeblocks is true or not
                 let blocksToSpawn = shouldPlaceThreeBlocks ? 3 : 1;
-                console.log(blocksToSpawn , this.blocksLeft)
+                //just doubleing checking here because sometimes it dint change 
                 if (blocksToSpawn > this.blocksLeft){
                     console.log("changed to 1 ", blocksToSpawn )
                     blocksToSpawn = 1;
                 }
         
+                //for one click if wall count is greater than the number of blocks, 
                 this.input.once('pointerdown', (pointer) => {
                     if (this.wallCount >= blocksToSpawn) {
+                        //for each wallpreview, spawn a block from Wall prefab
                         wallPreview.forEach((wall, index) => {
                             const spawnWall = Wall.spawn(
                                 this,
@@ -492,56 +486,64 @@ showBuildText() {
                                 this.wallCount
                             );
         
+                            //if valid wall was spawned aka not colliding with another wall 
                             if (spawnWall) {
+                                //add wall to group
                                 this.wallGroup.add(spawnWall);
+                                //play sound
                                 this.placeblock.play()
+                                //add collider between wall and goblins group
                                 this.physics.add.collider(spawnWall, this.goblinGroup, this.handleWallGoblinCollision, null, this);
+                                //decreaase wallcount and blocksleft. wall count is for backend counting and blocksleft is for frontend number
                                 this.wallCount -= 1;
                                 this.blocksLeft-=1;
                             }
                         });
         
-                        // this.wallCount -= blocksToSpawn;
-                        // this.blocksLeft-=blocksToSpawn;
-                        // console.log("subtracting from this.wallCount: ", this.wallCount);
-        
-                      
-        
+                        //if out of walls to place
                         if (this.wallCount <= 0) {
                             
-                            // this.flag = true;
+                            //building phase is false
                             this.buildingPhase = false;
+                            //call phase switch function 
                             this.showWaveText();
                             // this.buldingTimer.paused = true;
+                            //set enemy count for stage
                             this.enemycount = 10 +this.phaseNumber*5;
+                            //reset blocks left to 10 
                             this.blocksLeft =  10;
 
                         }
 
                     }
-        
+                    //destroy any leftover wall preview
                     wallPreview.forEach(wall => wall.destroy());
                 });
             }
     }
             
+        //function to click and cast lighting
         castLightning(x, y) {
+            //play thunder sound
             this.thunder.play();
-
-            console.log("casting lighting")
+            //save distance of where y is clicked to change dimensions of lighting
             const dist = y;
-
+            //add lgijting sprite to game, set size based on where the user clicked 
             const lightning = this.physics.add.sprite(x-13, 0, 'lightning').setOrigin(0,0).setDisplaySize(32,dist);
+            //set hitbox for lightning 
             lightning.setSize(16, 16).setOffset(0, lightning.height - 10);
+            //add overlap function to kill goblins if lighting overlaps
             this.physics.add.overlap(lightning, this.goblinGroup.getChildren(), this.handleLightningCollision, null, this);
+            //play cast animation 
             this.wizard.play("cast").once('animationcomplete', () => {
                 this.wizard.play("idle");
              });
-            this.thunder.play();
-            lightning.play('strike').once('animationcomplete', () => {
+            
+            //  this.thunder.play();
+            //after lughting anumation destory it 
+             lightning.play('strike').once('animationcomplete', () => {
                 
                 lightning.destroy();
-                console.log('Strike!');
             
             
             });
@@ -549,37 +551,46 @@ showBuildText() {
         
         }
     
-        
+      
+
+        //function to destroy goblins when lighting struck
         handleLightningCollision(lightning, goblin) {
+            //if goblin not been hit before
             if (!goblin.isHit) {
 
                 goblin.isHit = true;  
+                //decrease enemey count
                 this.enemycount--;
         
-                console.log(this.enemycount);
+                //stop goblin physics body so no more collisons 
                 goblin.body.enable = false;
-        
+                //once die animation complete, destroy goblin 
                 goblin.play('die').once('animationcomplete', () => {
                     goblin.destroy();
-                    console.log('defeated!');
         
                     // Check if all goblins are defeated
+                    
                     if (this.enemycount <= 0 && this.goblinGroup.getChildren().length === 0){
                        
-                        
+                            //building phase is on now
                             this.buildingPhase = true;
+                            //reset wall count but it will go down anyway
                             this.wallCount = 10;
-                            // this.blocksLeft = 10;
+                            //call phase switch function 
                             this.showBuildText();
                     
                     }
                 });
+            }else{
             }
         }
 
+        //if goblin collides with wizard
         handleWizardCollision(goblin, wizard){
+            //play death sound and pause music
             this.battlem.pause();
             this.death.play();
+            //start the game over scene and reset variables if they restart 
             this.scene.start('gameoverScene')
             this.blocksLeft = 10;
             this.phaseNumber = 1;
@@ -589,14 +600,17 @@ showBuildText() {
 
 
     update(){
+        //check for overlaps between lightning and goblins and goblins and wzard
         this.physics.overlap(this.lightningGroup, this.goblinGroup, this.handleLightningCollision, null, this);
         this.physics.overlap(this.wizard, this.goblinGroup, this.handleWizardCollision, null, this);
 
+        //if left is clicked play cast then idle 
         if (this.cursors.left.isDown) {
             this.wizard.play("cast").once('animationcomplete', () => {
                 this.wizard.play("idle");
             });
         }
+        //if building phase, no goblins allowed to be alive and timer is paused and block count is updating
         if (this.buildingPhase) {
             this.spawnTimer.paused = true;
             this.goblinGroup.getChildren().forEach(goblin=>{
@@ -606,7 +620,7 @@ showBuildText() {
         
         }
 
-        
+        //if its enemy phase then timer is unpaused and block text is hidden
         if (!this.buildingPhase) {
             // this.buldingTimer.paused = true;
             this.spawnTimer.paused = false;
@@ -614,7 +628,8 @@ showBuildText() {
        
             
         }
-
+        //if we are done with wave 3 and its the building phase again then 
+        //stop sound play win sound, kill timer and start victory scene 
         if (this.phaseNumber === 4 && this.buildingPhase ){
             this.buildm.stop();
             this.win.play()
@@ -626,11 +641,13 @@ showBuildText() {
 
     }
 
+        //function to update the text on the screen during building phase
     updateBlocksLeftText() {
         this.blocksLeftText.setText('Blocks Left: ' + this.wallCount);
         this.blocksLeftText.setVisible(true);  
     }
 
+   //hide the text when its not the bulding phase
     hideBlocksLeftText() {
         this.blocksLeftText.setVisible(false); 
     }

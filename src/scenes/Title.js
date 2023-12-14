@@ -5,6 +5,7 @@ class Title extends Phaser.Scene {
     }
 
     preload() {
+        //load assets
         this.load.path = './assets/';
         this.load.bitmapFont('BC', 'BC.png', 'BC.xml');
         this.load.audio('building', ['Build3.mp3']);
@@ -13,10 +14,9 @@ class Title extends Phaser.Scene {
     }
 
     create() {
+        //set cursor to thunder cursor
         this.input.setDefaultCursor('url(./assets/leftwand.cur), pointer');
-        // this.time.delayedCall(2000, () => {
-        //     this.showWaveText();
-        // });
+        //add background and sound
         this.add.image(centerX,centerY,'background');
         this.buildm = this.sound.add('building', {
             mute:false,
@@ -24,41 +24,50 @@ class Title extends Phaser.Scene {
             rate:1,
             loop:true
         });
-        if (!this.audioplaying){
-            this.buildm.play();
-            this.audioplaying = true;
-        }
+        
+        this.buildm.play();
+          
+        
+        
 
+      
        
-        this.cameras.main.setBackgroundColor('#ffffff');
+        // this.cameras.main.setBackgroundColor('#ffffff');
+        //add title
         let title01 = this.add.bitmapText(centerX+30, centerY-80, 'BC', 'Twisted Wizard', 45).setOrigin(0.5).setTintFill(0xffffff);
-        // let title02 = this.add.bitmapText(centerX, centerY, 'BC', 'Twisted Wizard', 32).setOrigin(0.5).setTint(0xff00ff).setBlendMode('SCREEN');
-        // let title03 = this.add.bitmapText(centerX, centerY, 'BC', 'Twisted Wizard', 32).setOrigin(0.5).setTint(0xffff00).setBlendMode('ADD');
+      
 
-
-
-
-        // this.add.bitmapText(centerX, centerY - 10 , 'BC', '', 24).setOrigin(0.5);
+        //have instructions credits and click to play 
         let playText = this.add.bitmapText(centerX+40, centerY, 'BC', 'Click to play', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
         let instructionText = this.add.bitmapText(centerX-85, centerY, 'BC', 'Instructions | ', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
         let creditsText = this.add.bitmapText(centerX+150, centerY, 'BC', '| Credits', 24).setOrigin(0.5).setInteractive().setTintFill(0xffffff);
 
 
+        //if they click on play text then start scene 
         playText.on('pointerdown', () => {
             playText.setTint(0x00ff00);  
             // this.scene.restart('PlayScene')
+            
+                this.buildm.stop()
+        
 
             this.scene.start('PlayScene');
-            this.buildm.stop()
         });
 
+        //if instructions is clicked on then go to that scene 
         instructionText.on('pointerdown', () => {
             instructionText.setTint(0x00ff00);  
+            this.buildm.stop()
+
             this.scene.start('instructionScene');
+
         });
 
+        //same for credits
         creditsText.on('pointerdown', () => {
             creditsText.setTint(0x00ff00);  
+            this.buildm.stop()
+
             this.scene.start('creditsScene');
         });
 

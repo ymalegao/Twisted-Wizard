@@ -1,22 +1,26 @@
 {
     "activeFile": "backgroundtiles.tmj",
     "expandedProjectPaths": [
+        "."
     ],
     "fileStates": {
+        "": {
+            "scaleInEditor": 1.23
+        },
         "#tilemap": {
             "scaleInDock": 3.5467,
             "scaleInEditor": 1
         },
         "backgroundtiles.tmj": {
-            "scale": 0.92,
+            "scale": 1.0712,
             "selectedLayer": 0,
             "viewCenter": {
-                "x": 255.97826086956525,
-                "y": 170.1086956521739
+                "x": 306.19865571321884,
+                "y": 136.76250933532486
             }
         },
         "backgroundtiles.tmj#tilemap": {
-            "scaleInDock": 1.79,
+            "scaleInDock": 1.82,
             "scaleInEditor": 2.16
         }
     },
